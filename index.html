@@ -3,425 +3,813 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>단비공감팀 주간보고 대시보드</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>단비공감팀 업무 현황 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;background:#f5f6fa;color:#222;font-size:14px}
-.container{max-width:1200px;margin:0 auto;padding:20px}
-header{background:#fff;border-bottom:1px solid #e0e0e0;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.logo{font-size:16px;font-weight:600;color:#1a1a2e}
-.logo span{color:#3b7dd8}
-.week-select{display:flex;align-items:center;gap:8px}
-.week-select label{font-size:12px;color:#666}
-select{border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:13px;background:#fff;cursor:pointer}
-.status-bar{background:#e8f4fd;border-left:3px solid #3b7dd8;padding:8px 16px;font-size:12px;color:#1a5a9a;margin-bottom:16px;border-radius:0 6px 6px 0}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.metric-card{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee}
-.metric-label{font-size:11px;color:#888;margin-bottom:6px}
-.metric-value{font-size:26px;font-weight:600;color:#1a1a2e}
-.metric-delta{font-size:11px;margin-top:4px}
-.up{color:#16a34a}.down{color:#dc2626}.neutral{color:#888}
-.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:16px}
-.card{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee}
-.card-title{font-size:12px;font-weight:600;color:#555;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.card-title::before{content:'';width:3px;height:12px;background:#3b7dd8;border-radius:2px;display:inline-block}
-.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:#666}
-.legend span{display:flex;align-items:center;gap:4px}
-.ld{width:10px;height:3px;border-radius:2px;display:inline-block}
-.ldb{width:10px;height:10px;border-radius:2px;display:inline-block}
-.full-card{background:#fff;border-radius:10px;padding:16px;border:1px solid #eee;margin-bottom:16px}
+body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;background:#f0f4f8;color:#1e293b;font-size:14px}
+.container{max-width:1280px;margin:0 auto;padding:20px 24px}
+
+/* Header */
+header{background:#1e40af;color:#fff;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.logo span{opacity:0.7;font-weight:400;font-size:13px;margin-left:8px}
+select{border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:5px 10px;font-size:13px;background:rgba(255,255,255,0.15);color:#fff;cursor:pointer;outline:none}
+select option{background:#1e3a8a;color:#fff}
+
+/* Section headers */
+.sec-title{font-size:16px;font-weight:700;color:#1e293b;margin:24px 0 12px;display:flex;align-items:center;gap:8px}
+.sec-title::before{content:'';width:4px;height:18px;background:#2563eb;border-radius:3px;display:inline-block;flex-shrink:0}
+.week-title-bar{background:#fff;border-radius:12px;padding:14px 20px;margin-bottom:16px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.week-title-bar h1{font-size:18px;font-weight:700;color:#0f172a}
+.week-title-bar .range{font-size:12px;color:#64748b;background:#f1f5f9;padding:4px 10px;border-radius:20px}
+
+/* Month section divider */
+.month-divider{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:12px;padding:18px 24px;margin:36px 0 20px;display:flex;align-items:center;justify-content:space-between}
+.month-divider h2{font-size:18px;font-weight:700}
+.month-divider .msub{font-size:12px;opacity:0.8;margin-top:3px}
+.month-divider .mkpi{font-size:13px;text-align:right}
+.month-divider .mkpi strong{font-size:16px}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.kpi-card{background:#fff;border-radius:12px;padding:16px 14px;border:1px solid #e2e8f0;overflow:hidden;position:relative}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--ac,#3b82f6);border-radius:12px 12px 0 0}
+.kpi-label{font-size:11px;color:#64748b;margin-bottom:8px;font-weight:500;white-space:nowrap}
+.kpi-value{font-size:21px;font-weight:700;color:#0f172a;line-height:1}
+.kpi-delta{font-size:11px;margin-top:7px}
+.up{color:#16a34a}.down{color:#dc2626}.neu{color:#94a3b8}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:18px;border:1px solid #e2e8f0;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:600;color:#475569;margin-bottom:14px;display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:0.3px}
+.card-title::before{content:'';width:3px;height:13px;background:#3b82f6;border-radius:2px;display:inline-block;flex-shrink:0}
+.row2{display:grid;grid-template-columns:1.4fr 0.6fr;gap:16px;margin-bottom:16px;align-items:start}
+.row2 .card{margin-bottom:0}
+
+/* Tables */
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:#f0f4ff;color:#444;font-weight:600;padding:7px 8px;text-align:center;border-bottom:1px solid #dde3f0}
-td{padding:6px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:#333}
+th{background:#f8fafc;color:#374151;font-weight:600;padding:8px 10px;text-align:center;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+td{padding:7px 10px;text-align:center;border-bottom:1px solid #f1f5f9;color:#1e293b}
+tr:hover td{background:#f8fafc}
 tr:last-child td{border-bottom:none}
-.grp-label{background:#f7f8fc;font-weight:600;color:#555;text-align:left!important;padding-left:12px}
-.total-row td{background:#fffbea;font-weight:600}
-.ch-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.ch-item{background:#f9fafc;border-radius:8px;padding:10px 12px;border:1px solid #eef}
-.ch-name{font-size:11px;color:#666;margin-bottom:3px}
-.ch-val{font-size:18px;font-weight:600;color:#1a1a2e}
-.ch-rate{font-size:11px;color:#3b7dd8;margin-top:2px}
-.loading{text-align:center;padding:60px;color:#888;font-size:14px}
-.error-msg{background:#fff3f3;border:1px solid #fca5a5;border-radius:8px;padding:16px;color:#dc2626;font-size:13px;margin-bottom:16px}
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:#e8f4fd;color:#1a5a9a;margin-left:6px}
-.setup-banner{background:#fffbea;border:1px solid #fcd34d;border-radius:10px;padding:16px 20px;margin-bottom:16px;font-size:13px;color:#78350f}
-.setup-banner h3{font-size:14px;margin-bottom:8px}
-.setup-banner ol{padding-left:18px;line-height:1.9}
-.setup-banner code{background:#fef3c7;padding:1px 6px;border-radius:3px;font-family:monospace;font-size:12px}
-@media(max-width:768px){.metric-grid{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}}
+.grp{background:#eff6ff;font-weight:700;color:#1d4ed8;text-align:left!important;padding-left:14px;border-right:2px solid #bfdbfe}
+.tot td{background:#fefce8;font-weight:700;border-top:2px solid #fde68a}
+.up-c{color:#16a34a;font-weight:600}.dn-c{color:#dc2626;font-weight:600}.neu-c{color:#94a3b8}
+
+/* Channel share bar */
+.sbar{height:6px;background:#e2e8f0;border-radius:3px;width:60px;display:inline-block;vertical-align:middle;margin-left:4px}
+.sfill{height:100%;border-radius:3px}
+
+/* Donut */
+.donut-wrap{position:relative}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;line-height:1.2}
+.dc-val{font-size:20px;font-weight:700;color:#0f172a}
+.dc-lbl{font-size:10px;color:#94a3b8;margin-top:2px}
+
+/* Collapsible */
+.coll-hdr{cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #f1f5f9;user-select:none}
+.coll-hdr .toggle{font-size:11px;color:#3b82f6;font-weight:600;border:1px solid #bfdbfe;background:#eff6ff;padding:3px 10px;border-radius:20px}
+.coll-body{overflow:hidden;max-height:0;transition:max-height 0.35s ease}
+.coll-body.open{max-height:3000px}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#64748b}
+.li{display:flex;align-items:center;gap:4px}
+.ll{width:16px;height:3px;border-radius:2px;display:inline-block}
+.lb{width:12px;height:10px;border-radius:2px;display:inline-block}
+
+/* Info bar */
+.info-bar{background:#eff6ff;border-left:3px solid #3b82f6;padding:8px 14px;font-size:12px;color:#1e40af;margin-bottom:16px;border-radius:0 6px 6px 0}
+.setup-banner{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:#78350f}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:#dbeafe;color:#1e40af}
+
+/* Charts */
+.ch-wrap{position:relative;width:100%}
+.h-180{height:180px}.h-220{height:220px}.h-260{height:260px}
+
+/* ch-legend grid */
+.ch-legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;font-size:11px}
+.ch-legend-item{display:flex;align-items:center;gap:5px}
+.ch-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.row2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">단비공감팀 <span>주간보고 대시보드</span></div>
-  <div class="week-select">
-    <label>주차 선택</label>
-    <select id="weekSelector" onchange="renderWeek(this.value)">
-      <option value="">불러오는 중...</option>
-    </select>
-  </div>
+  <div class="logo">단비공감팀 <span>업무 현황 대시보드</span></div>
+  <select id="weekSel" onchange="renderWeek(this.value)"><option>불러오는 중...</option></select>
 </header>
 
 <div class="container">
   <div id="setupBanner" class="setup-banner" style="display:none">
-    <h3>⚙️ 초기 설정 필요</h3>
-    <ol>
-      <li>이 파일 상단의 <code>SHEET_ID</code>를 본인 Google Sheets ID로 교체하세요</li>
-      <li>Google Sheets → 파일 → 웹에 게시 → 각 시트를 CSV로 게시</li>
-      <li>설정 완료 후 페이지를 새로고침하세요</li>
-    </ol>
+    ⚙️ <strong>초기 설정 필요:</strong> 파일 상단 <code>SHEET_ID</code>를 본인 Google Sheets ID로 교체 후 GitHub에 재업로드하세요.
+    현재는 샘플 데이터로 표시됩니다.
   </div>
 
-  <div id="errorMsg" class="error-msg" style="display:none"></div>
-  <div id="statusBar" class="status-bar" style="display:none"></div>
-  <div id="loading" class="loading">데이터를 불러오는 중...</div>
-  <div id="dashboard" style="display:none">
-    <div class="metric-grid">
-      <div class="metric-card"><div class="metric-label">주간 인입수</div><div class="metric-value" id="m-inbound">-</div><div class="metric-delta" id="m-inbound-d"></div></div>
-      <div class="metric-card"><div class="metric-label">즉시처리율</div><div class="metric-value" id="m-instant">-</div><div class="metric-delta" id="m-instant-d"></div></div>
-      <div class="metric-card"><div class="metric-label">콜백포함처리율</div><div class="metric-value" id="m-callback">-</div><div class="metric-delta" id="m-callback-d"></div></div>
-      <div class="metric-card"><div class="metric-label">일평균 인입</div><div class="metric-value" id="m-daily">-</div><div class="metric-delta" id="m-daily-d"></div></div>
-    </div>
+  <!-- ═══════════════════════════════════════════
+       ① 주간 타이틀 + 핵심 지표 6카드
+  ══════════════════════════════════════════════ -->
+  <div class="week-title-bar">
+    <h1 id="weekTitle">[업무 현황]</h1>
+    <span class="range" id="weekRange"></span>
+  </div>
+  <div id="infoBar" class="info-bar" style="display:none"></div>
 
-    <div class="charts-row">
-      <div class="card">
-        <div class="card-title">주차별 콜 처리율 추이 <span class="badge">최근 8주</span></div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--ac:#3b82f6">
+      <div class="kpi-label">일 평균 인입수</div>
+      <div class="kpi-value" id="k0">-</div><div class="kpi-delta" id="k0d"></div>
+    </div>
+    <div class="kpi-card" style="--ac:#0ea5e9">
+      <div class="kpi-label">주간 인입수</div>
+      <div class="kpi-value" id="k1">-</div><div class="kpi-delta" id="k1d"></div>
+    </div>
+    <div class="kpi-card" style="--ac:#10b981">
+      <div class="kpi-label">즉시콜 처리율</div>
+      <div class="kpi-value" id="k2">-</div><div class="kpi-delta" id="k2d"></div>
+    </div>
+    <div class="kpi-card" style="--ac:#8b5cf6">
+      <div class="kpi-label">콜백포함 처리율</div>
+      <div class="kpi-value" id="k3">-</div><div class="kpi-delta" id="k3d"></div>
+    </div>
+    <div class="kpi-card" style="--ac:#f59e0b">
+      <div class="kpi-label">인당 평균 콜 수</div>
+      <div class="kpi-value" id="k4">-</div><div class="kpi-delta" id="k4d"></div>
+    </div>
+    <div class="kpi-card" style="--ac:#ef4444">
+      <div class="kpi-label">인당 평균 콜 시간</div>
+      <div class="kpi-value" id="k5">-</div><div class="kpi-delta" id="k5d"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ② 최근 4주 트렌드
+  ══════════════════════════════════════════════ -->
+  <div class="sec-title">최근 4주 업무 추이</div>
+  <div class="card">
+    <div class="legend">
+      <span class="li"><span class="ll" style="background:#3b82f6"></span>즉시콜 처리율</span>
+      <span class="li"><span class="ll" style="background:#8b5cf6"></span>콜백포함 처리율</span>
+      <span class="li"><span class="ll" style="background:#f59e0b"></span>인당 콜 수 (건)</span>
+      <span class="li"><span class="ll" style="background:#ef4444"></span>인당 콜 시간 (분)</span>
+    </div>
+    <div class="ch-wrap h-220"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ③ 채널별 인입 현황
+  ══════════════════════════════════════════════ -->
+  <div class="sec-title">채널별 인입 현황</div>
+  <div class="row2">
+    <div class="card">
+      <div class="card-title">채널별 인입 현황 &nbsp;<small style="font-weight:400;text-transform:none;color:#94a3b8">(전체 비중 및 전주 대비 증감)</small></div>
+      <table>
+        <thead><tr><th style="text-align:left;padding-left:10px">채널</th><th>인입수</th><th>전체 비중</th><th>전주 대비</th></tr></thead>
+        <tbody id="chBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">채널 비중</div>
+      <div class="donut-wrap">
+        <div class="ch-wrap h-180"><canvas id="chChart"></canvas></div>
+        <div class="donut-center"><div class="dc-val" id="donutTotal">-</div><div class="dc-lbl">총 인입</div></div>
+      </div>
+      <div class="ch-legend-grid" id="chLegend"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ④ 날짜별 업무 현황
+  ══════════════════════════════════════════════ -->
+  <div class="sec-title" id="dailyTitle">날짜별 업무 현황</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+      <div>
         <div class="legend">
-          <span><span class="ld" style="background:#3b7dd8;height:2px"></span>즉시처리율</span>
-          <span><span class="ld" style="background:#16a34a;height:2px;border-top:2px dashed #16a34a;background:none"></span>콜백포함처리율</span>
+          <span class="li"><span class="lb" style="background:#bfdbfe"></span>인입수</span>
+          <span class="li"><span class="ll" style="background:#3b82f6"></span>즉시처리율</span>
+          <span class="li"><span class="ll" style="background:#8b5cf6"></span>콜백포함처리율</span>
         </div>
-        <div style="position:relative;width:100%;height:200px"><canvas id="trendChart" role="img" aria-label="주차별 콜 처리율 추이"></canvas></div>
+        <div class="ch-wrap h-260"><canvas id="dailyChart"></canvas></div>
       </div>
-      <div class="card">
-        <div class="card-title">채널별 인입 현황</div>
-        <div style="position:relative;width:100%;height:160px"><canvas id="channelChart" role="img" aria-label="채널별 인입 현황 도넛 차트"></canvas></div>
-        <div class="ch-grid" id="chGrid"></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th><th>인입</th><th>즉시처리</th><th>연결실패</th><th>즉시율</th><th>콜백포함율</th>
+            </tr>
+            <tr style="background:#f0f9ff;font-size:11px">
+              <th>콜백</th><th>콜백예약</th><th>콜백기타</th><th>통화시간</th><th>1인당응대</th><th>PC점검</th>
+            </tr>
+          </thead>
+          <tbody id="dailyBody"></tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11px;color:#94a3b8">
+          ※ 콜백예약=상담 후 예약 / 콜백기타=직접 예약전화
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="full-card">
-      <div class="card-title">일별 인입 및 처리율</div>
-      <div class="legend">
-        <span><span class="ldb" style="background:#bdd7ee"></span>인입수 (막대)</span>
-        <span><span class="ld" style="background:#3b7dd8"></span>즉시처리율</span>
-        <span><span class="ld" style="background:#16a34a"></span>콜백포함처리율</span>
-      </div>
-      <div style="position:relative;width:100%;height:220px"><canvas id="dailyChart" role="img" aria-label="일별 인입 및 처리율 복합 차트"></canvas></div>
+  <!-- ═══════════════════════════════════════════
+       ⑤ 내선별 업무 현황 (주단위, 숨김/펼침)
+  ══════════════════════════════════════════════ -->
+  <div class="card">
+    <div class="coll-hdr" onclick="toggleExt()">
+      <div class="sec-title" style="margin:0">내선별 업무 현황 &nbsp;<span class="badge" id="extBadge"></span></div>
+      <span class="toggle" id="extToggle">▼ 펼치기</span>
     </div>
+    <div class="coll-body" id="extBody">
+      <div style="padding-top:14px;overflow-x:auto">
+        <table>
+          <thead><tr><th>구분</th><th>내선</th><th>인입</th><th>일평균인입</th><th>발신</th><th>일평균발신</th><th>인입통화(h)</th><th>발신통화(h)</th></tr></thead>
+          <tbody id="extTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    <div class="full-card">
-      <div class="card-title">개인별 업무 현황 <span class="badge" id="weekBadge"></span></div>
-      <table id="personTable">
-        <thead><tr><th>구분</th><th>내선</th><th>인입</th><th>인입일평균</th><th>발신</th><th>발신일평균</th><th>인입통화h</th><th>발신통화h</th></tr></thead>
-        <tbody id="personBody"></tbody>
+  <!-- ═══════════════════════════════════════════
+       ⑥ 월 업무 현황 (구분선)
+  ══════════════════════════════════════════════ -->
+  <div class="month-divider">
+    <div>
+      <h2 id="monthTitle">[월 업무 현황]</h2>
+      <div class="msub" id="monthSub"></div>
+    </div>
+    <div class="mkpi" id="monthKpi"></div>
+  </div>
+
+  <!-- ⑦ 개인별 업무 현황 (월 누적) -->
+  <div class="sec-title">개인별 업무 현황 <small style="font-size:12px;font-weight:400;color:#64748b">(월 누적)</small></div>
+  <div class="card">
+    <table>
+      <thead><tr><th>구분</th><th>내선</th><th>인입</th><th>발신</th><th>인입통화(h)</th><th>발신통화(h)</th><th>일평균 인입</th></tr></thead>
+      <tbody id="personBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ⑧ 즉시콜/콜백 연간 처리율 -->
+  <div class="sec-title">즉시콜 · 콜백 연간 처리율</div>
+  <div class="card">
+    <div class="legend">
+      <span class="li"><span class="ll" style="background:#3b82f6"></span>즉시처리율</span>
+      <span class="li"><span class="ll" style="background:#8b5cf6"></span>콜백포함처리율</span>
+    </div>
+    <div class="ch-wrap h-220"><canvas id="annRateChart"></canvas></div>
+    <div style="margin-top:14px;overflow-x:auto">
+      <table>
+        <thead><tr><th>월</th><th>총 인입수</th><th>즉시처리수</th><th>즉시처리율</th><th>콜백포함수</th><th>콜백포함처리율</th><th>영업일</th></tr></thead>
+        <tbody id="annRateBody"></tbody>
       </table>
     </div>
   </div>
-</div>
+
+  <!-- ⑨ 월 평균 콜 수 & 통화시간 연간 -->
+  <div class="sec-title">월 평균 콜 수 &amp; 통화시간 <small style="font-size:12px;font-weight:400;color:#64748b">(연간 누적)</small></div>
+  <div class="card">
+    <div class="legend">
+      <span class="li"><span class="lb" style="background:#bfdbfe"></span>일평균 인입수</span>
+      <span class="li"><span class="ll" style="background:#f59e0b"></span>인당 평균 인입</span>
+    </div>
+    <div class="ch-wrap h-220"><canvas id="annCallChart"></canvas></div>
+    <div style="margin-top:14px;overflow-x:auto">
+      <table>
+        <thead><tr><th>월</th><th>일평균 인입</th><th>인당 평균 인입</th><th>총 발신</th><th>주간 인입합계</th></tr></thead>
+        <tbody id="annCallBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /container -->
 
 <script>
-// ════════════════════════════════════════════════
-//  ⚙️  여기에 본인 Google Sheets ID를 넣으세요
-// ════════════════════════════════════════════════
+// ════════════════════════════════════════
+// ⚙️  Google Sheets ID를 여기에 넣으세요
+// ════════════════════════════════════════
 const SHEET_ID = 'YOUR_SHEET_ID_HERE';
+const SHEETS = { weekly:'주간현황', daily:'일별현황', person:'개인별현황' };
 
-// 시트 이름 (Google Sheets에서 아래 이름으로 시트를 만드세요)
-const SHEETS = {
-  weekly:  '주간현황',
-  daily:   '일별현황',
-  person:  '개인별현황'
-};
-
-// 그룹 매핑 (내선번호 → 그룹명)
 const EXT_GROUP = {
   9027:'기술지원', 9011:'기술지원', 9013:'기술지원',
   9010:'윙크', 9012:'윙크', 9021:'윙크',
   9007:'캐츠/캐츠홈', 9008:'캐츠/캐츠홈', 9015:'캐츠/캐츠홈'
 };
+const GRP_ORDER = ['기술지원','윙크','캐츠/캐츠홈','기타'];
 
-const CH_COLORS = ['#3b7dd8','#16a34a','#f59e0b','#ef4444'];
-const CH_KEYS = [
-  {name:'윙크 1522-1244', in:'윙크인입', 즉:'윙크즉시율', 콜:'윙크콜백율'},
-  {name:'윙크북스 1855-1244', in:'윙크북스인입', 즉:'윙크북스즉시율', 콜:'윙크북스콜백율'},
-  {name:'캐츠홈 1660-1244', in:'캐츠홈인입', 즉:'캐츠홈즉시율', 콜:'캐츠홈콜백율'},
-  {name:'캐츠 1660-1344', in:'캐츠인입', 즉:'캐츠즉시율', 콜:'캐츠콜백율'},
+const CHANNELS = [
+  {key:'윙크인입',   name:'윙크 1522-1244',    color:'#3b82f6'},
+  {key:'윙크북스인입', name:'윙크북스 1855-1244', color:'#10b981'},
+  {key:'캐츠홈인입',  name:'캐츠홈 1660-1244',  color:'#f59e0b'},
+  {key:'캐츠인입',   name:'캐츠 1660-1344',    color:'#ef4444'},
 ];
 
-let allWeekly=[], allDaily=[], allPerson=[];
-let trendChart=null, channelChart=null, dailyChart=null;
+let allW=[], allD=[], allP=[];
+const CH = {};  // chart instances
 
-// ── CSV 파싱 ──────────────────────────────────────
+// ── Utilities ──────────────────────────────────
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+  const hdrs = lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
   return lines.slice(1).map(line => {
-    const vals = [];
-    let cur='', inQ=false;
-    for (const ch of line) {
-      if (ch==='"') { inQ=!inQ; continue; }
-      if (ch===',' && !inQ) { vals.push(cur.trim()); cur=''; }
-      else cur+=ch;
+    const vals=[]; let cur='', inQ=false;
+    for(const c of line){
+      if(c==='"'){inQ=!inQ;continue}
+      if(c===','&&!inQ){vals.push(cur.trim());cur=''}else cur+=c;
     }
     vals.push(cur.trim());
-    const obj={};
-    headers.forEach((h,i) => obj[h] = isNaN(vals[i]) || vals[i]==='' ? vals[i]||'' : Number(vals[i]));
-    return obj;
+    const o={};
+    hdrs.forEach((h,i)=>{const v=vals[i]||''; o[h]=v!==''&&!isNaN(v)?Number(v):v});
+    return o;
   });
 }
 
-// ── Sheets fetch ─────────────────────────────────
 async function fetchSheet(name) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`시트 '${name}' 로드 실패 (${res.status})`);
-  return parseCSV(await res.text());
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(`시트 '${name}' 로드 실패 (${r.status})`);
+  return parseCSV(await r.text());
 }
 
-// ── delta 표시 ───────────────────────────────────
-function delta(cur, prev, unit='', invert=false) {
-  if (prev===undefined||prev===''||isNaN(prev)) return '<span class="neutral">-</span>';
-  const d = cur - prev;
-  const sign = d >= 0 ? '+' : '';
-  const cls = d > 0 ? (invert?'down':'up') : d < 0 ? (invert?'up':'down') : 'neutral';
-  const arrow = d > 0 ? '▲' : d < 0 ? '▼' : '─';
-  return `<span class="${cls}">${arrow} ${sign}${typeof unit==='%'? d.toFixed(2)+'%' : Math.abs(d).toLocaleString()+unit} vs 지난주</span>`;
+function n(v){return Number(v)||0}
+function fmt(v){return n(v).toLocaleString()}
+function pct(v){return n(v).toFixed(2)+'%'}
+
+function delta(cur, prev, unit='', lessIsBetter=false) {
+  if(prev===undefined||prev===''||isNaN(n(prev))) return '<span class="neu">―</span>';
+  const d=n(cur)-n(prev); if(d===0) return '<span class="neu">― 변동없음</span>';
+  const better = lessIsBetter ? d<0 : d>0;
+  const cls=better?'up':'down', arr=d>0?'▲':'▼';
+  const abs=Math.abs(d), disp=unit==='%'?abs.toFixed(2)+'%p':abs.toLocaleString()+unit;
+  return `<span class="${cls}">${arr} ${disp} 지난주 대비</span>`;
 }
 
-// ── 메인 렌더 ────────────────────────────────────
-function renderWeek(weekLabel) {
-  const w = allWeekly.find(r => r['주차'] === weekLabel);
-  if (!w) return;
-  const idx = allWeekly.indexOf(w);
-  const prev = idx > 0 ? allWeekly[idx-1] : null;
-
-  document.getElementById('weekBadge').textContent = weekLabel;
-  document.getElementById('statusBar').textContent =
-    `${weekLabel} · ${w['시작일']} ~ ${w['종료일']} · 영업일 ${w['영업일']}일`;
-  document.getElementById('statusBar').style.display = 'block';
-
-  // 메트릭 카드
-  document.getElementById('m-inbound').textContent = Number(w['인입수']).toLocaleString() + '건';
-  document.getElementById('m-instant').textContent = Number(w['즉시처리율']).toFixed(2) + '%';
-  document.getElementById('m-callback').textContent = Number(w['콜백포함처리율']).toFixed(2) + '%';
-  document.getElementById('m-daily').textContent = Number(w['일평균인입']).toFixed(1) + '건';
-  document.getElementById('m-inbound-d').innerHTML = delta(w['인입수'], prev?.['인입수'], '건', true);
-  document.getElementById('m-instant-d').innerHTML = delta(w['즉시처리율'], prev?.['즉시처리율'], '%');
-  document.getElementById('m-callback-d').innerHTML = delta(w['콜백포함처리율'], prev?.['콜백포함처리율'], '%');
-  document.getElementById('m-daily-d').innerHTML = delta(w['일평균인입'], prev?.['일평균인입'], '건', true);
-
-  // 처리율 추이 차트
-  const recent = allWeekly.slice(Math.max(0, idx-7), idx+1);
-  renderTrendChart(recent);
-
-  // 채널별 도넛
-  renderChannelChart(w);
-
-  // 일별
-  const daily = allDaily.filter(r => r['주차'] === weekLabel);
-  renderDailyChart(daily);
-
-  // 개인별
-  const persons = allPerson.filter(r => r['주차'] === weekLabel);
-  renderPersonTable(persons, w['영업일']||5);
+// ── Monthly aggregation ─────────────────────────
+function buildMonthly() {
+  const m={};
+  allW.forEach(w=>{
+    const key=w['주차']?.match(/^(\d+월)/)?.[1]; if(!key) return;
+    if(!m[key]) m[key]={month:key,workDays:0,인입수:0,즉시처리수:0,콜백포함수:0,총발신:0,weeks:0};
+    m[key].workDays+=n(w['영업일']); m[key].인입수+=n(w['인입수']);
+    m[key].즉시처리수+=n(w['즉시처리수']); m[key].콜백포함수+=n(w['콜백포함처리율']>0?(n(w['인입수'])*n(w['콜백포함처리율'])/100):0);
+    m[key].총발신+=n(w['총발신']); m[key].weeks++;
+    // Re-compute 즉시처리수 from rate if not provided
+    if(!w['즉시처리수']&&w['즉시처리율']) m[key].즉시처리수+=Math.round(n(w['인입수'])*n(w['즉시처리율'])/100);
+  });
+  Object.values(m).forEach(mo=>{
+    mo.즉시처리율=mo.인입수>0?mo.즉시처리수/mo.인입수*100:0;
+    mo.콜백포함처리율=mo.인입수>0?mo.콜백포함수/mo.인입수*100:0;
+    mo.일평균인입=mo.workDays>0?mo.인입수/mo.workDays:0;
+  });
+  return m;
 }
 
-function renderTrendChart(weeks) {
-  if (trendChart) trendChart.destroy();
-  const gc = '#e5e7eb';
-  trendChart = new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels: weeks.map(w => w['주차']),
-      datasets: [
-        {label:'즉시처리율', data: weeks.map(w=>w['즉시처리율']),
-         borderColor:'#3b7dd8', backgroundColor:'rgba(59,125,216,0.07)',
-         tension:0.3, pointRadius:4, pointBackgroundColor:'#3b7dd8'},
-        {label:'콜백포함처리율', data: weeks.map(w=>w['콜백포함처리율']),
-         borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,0.05)',
-         tension:0.3, pointRadius:4, pointBackgroundColor:'#16a34a', borderDash:[5,3]},
+// ── Render ─────────────────────────────────────
+function renderWeek(lbl) {
+  if(!lbl) return;
+  const w=allW.find(r=>r['주차']===lbl); if(!w) return;
+  const idx=allW.indexOf(w), prev=idx>0?allW[idx-1]:null;
+
+  // Title
+  document.getElementById('weekTitle').textContent=`[${lbl} 단비공감팀 고객상담 업무 현황]`;
+  document.getElementById('weekRange').textContent=`${w['시작일']} ~ ${w['종료일']} · 영업일 ${w['영업일']}일`;
+  document.getElementById('infoBar').innerHTML=`📅 <strong>${lbl}</strong> &nbsp;|&nbsp; 기간: ${w['시작일']} ~ ${w['종료일']} &nbsp;|&nbsp; 영업일: ${w['영업일']}일 &nbsp;|&nbsp; 총 인입: <strong>${fmt(w['인입수'])}건</strong>`;
+  document.getElementById('infoBar').style.display='block';
+
+  // KPI 계산
+  const persons=allP.filter(r=>r['주차']===lbl);
+  const prevPersons=prev?allP.filter(r=>r['주차']===prev['주차']):[];
+  const pc=persons.length||9, ppc=prevPersons.length||9;
+  const inH=persons.reduce((s,p)=>s+n(p['인입통화h']),0);
+  const pinH=prevPersons.reduce((s,p)=>s+n(p['인입통화h']),0);
+  const perCall=pc?n(w['인입수'])/pc:0;
+  const perCallPrev=prev&&ppc?n(prev['인입수'])/ppc:null;
+  const perTimeMin=pc?(inH/pc)*60:0;
+  const perTimeMinPrev=prev&&ppc?(pinH/ppc)*60:null;
+
+  const cards=[
+    [n(w['일평균인입']).toFixed(1)+'건', n(w['일평균인입']), prev?.['일평균인입'], '건', true],
+    [fmt(w['인입수'])+'건', n(w['인입수']), prev?.['인입수'], '건', true],
+    [pct(w['즉시처리율']), n(w['즉시처리율']), prev?.['즉시처리율'], '%', false],
+    [pct(w['콜백포함처리율']), n(w['콜백포함처리율']), prev?.['콜백포함처리율'], '%', false],
+    [perCall.toFixed(1)+'건', perCall, perCallPrev, '건', true],
+    [perTimeMin.toFixed(0)+'분', perTimeMin, perTimeMinPrev, '분', true],
+  ];
+  cards.forEach(([val,cur,pv,unit,lib],i)=>{
+    document.getElementById('k'+i).textContent=val;
+    document.getElementById('k'+i+'d').innerHTML=delta(cur,pv,unit,lib);
+  });
+
+  // ② 4주 트렌드
+  renderTrend(allW.slice(Math.max(0,idx-3),idx+1));
+
+  // ③ 채널별
+  renderChannel(w, prev);
+
+  // ④ 날짜별
+  document.getElementById('dailyTitle').textContent=`날짜별 업무 현황 (${lbl})`;
+  renderDaily(allD.filter(r=>r['주차']===lbl));
+
+  // ⑤ 내선별
+  document.getElementById('extBadge').textContent=lbl;
+  renderExt(persons, n(w['영업일'])||5);
+
+  // ⑥ 월 섹션
+  const month=lbl.match(/^(\d+월)/)?.[1]||'';
+  renderMonthSection(month);
+}
+
+function renderTrend(weeks) {
+  if(CH.trend) CH.trend.destroy();
+  // 인당콜수, 인당콜시간 계산
+  const perCalls = weeks.map(w=>{
+    const ps=allP.filter(r=>r['주차']===w['주차']);
+    const pc=ps.length||9;
+    return pc>0 ? +(n(w['인입수'])/pc).toFixed(1) : 0;
+  });
+  const perTimes = weeks.map(w=>{
+    const ps=allP.filter(r=>r['주차']===w['주차']);
+    const pc=ps.length||9;
+    const totalH=ps.reduce((s,p)=>s+n(p['인입통화h']),0);
+    return pc>0 ? +((totalH/pc)*60).toFixed(0) : 0;
+  });
+  CH.trend=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{
+      labels:weeks.map(w=>w['주차']),
+      datasets:[
+        {label:'즉시콜 처리율(%)',data:weeks.map(w=>+n(w['즉시처리율']).toFixed(2)),
+         borderColor:'#3b82f6',pointBackgroundColor:'#3b82f6',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y1',order:1,borderWidth:2},
+        {label:'콜백포함 처리율(%)',data:weeks.map(w=>+n(w['콜백포함처리율']).toFixed(2)),
+         borderColor:'#8b5cf6',pointBackgroundColor:'#8b5cf6',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y1',borderDash:[5,3],order:1,borderWidth:2},
+        {label:'인당 콜 수(건)',data:perCalls,
+         borderColor:'#f59e0b',pointBackgroundColor:'#f59e0b',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y2',order:2,borderWidth:2},
+        {label:'인당 콜 시간(분)',data:perTimes,
+         borderColor:'#ef4444',pointBackgroundColor:'#ef4444',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y2',borderDash:[4,3],order:2,borderWidth:2},
       ]
     },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
       scales:{
-        x:{grid:{color:gc}, ticks:{font:{size:10}}},
-        y:{grid:{color:gc}, ticks:{callback:v=>v+'%', font:{size:10}}, min:60, max:100}
+        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:12}}},
+        y1:{grid:{color:'#f1f5f9'},min:60,max:100,
+            ticks:{callback:v=>v+'%',font:{size:10}},
+            title:{display:true,text:'처리율',font:{size:10}}},
+        y2:{position:'right',grid:{display:false},min:0,
+            ticks:{font:{size:10}},
+            title:{display:true,text:'건/분',font:{size:10}}}
       }
     }
   });
 }
 
-function renderChannelChart(w) {
-  if (channelChart) channelChart.destroy();
-  const vals = CH_KEYS.map(c => w[c.in]||0);
-  const total = vals.reduce((a,b)=>a+b,0);
-  channelChart = new Chart(document.getElementById('channelChart'), {
-    type: 'doughnut',
-    data: {
-      labels: CH_KEYS.map(c=>c.name),
-      datasets:[{data:vals, backgroundColor:CH_COLORS, borderWidth:2, borderColor:'#fff'}]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      cutout:'68%'
-    }
+function renderChannel(w, prev) {
+  const total=n(w['인입수']), prevTotal=prev?n(prev['인입수']):0;
+  let html='';
+  CHANNELS.forEach(ch=>{
+    const v=n(w[ch.key]), pv=prev?n(prev[ch.key]):0;
+    const share=total>0?v/total*100:0, pshare=prevTotal>0?pv/prevTotal*100:0;
+    const diff=share-pshare;
+    const dcls=diff>0.05?'up-c':diff<-0.05?'dn-c':'neu-c';
+    const darr=diff>0.05?'▲':diff<-0.05?'▼':'─';
+    const dstr=Math.abs(diff)<0.05?'변동없음':`${darr} ${Math.abs(diff).toFixed(1)}%p`;
+    html+=`<tr>
+      <td style="text-align:left;padding-left:10px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${ch.color};display:inline-block;margin-right:6px;vertical-align:middle"></span>${ch.name}
+      </td>
+      <td>${fmt(v)}</td>
+      <td>
+        ${share.toFixed(1)}%
+        <span class="sbar"><span class="sfill" style="width:${share}%;background:${ch.color}"></span></span>
+      </td>
+      <td class="${dcls}">${dstr}</td>
+    </tr>`;
   });
-  const grid = document.getElementById('chGrid');
-  grid.innerHTML = CH_KEYS.map((c,i) => `
-    <div class="ch-item">
-      <div class="ch-name" style="color:${CH_COLORS[i]}">${c.name.split(' ')[0]}</div>
-      <div class="ch-val">${(w[c.in]||0).toLocaleString()}</div>
-      <div class="ch-rate">즉시 ${(w[c.즉]||0).toFixed(1)}% / 콜백포함 ${(w[c.콜]||0).toFixed(1)}%</div>
+  html+=`<tr class="tot"><td style="text-align:left;padding-left:10px">합 계</td><td>${fmt(total)}</td><td>100%</td><td class="neu-c">―</td></tr>`;
+  document.getElementById('chBody').innerHTML=html;
+
+  if(CH.ch) CH.ch.destroy();
+  const vals=CHANNELS.map(ch=>n(w[ch.key]));
+  CH.ch=new Chart(document.getElementById('chChart'),{
+    type:'doughnut',
+    data:{labels:CHANNELS.map(c=>c.name),datasets:[{data:vals,backgroundColor:CHANNELS.map(c=>c.color),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'66%'}
+  });
+  document.getElementById('donutTotal').textContent=fmt(total);
+  document.getElementById('chLegend').innerHTML=CHANNELS.map((ch,i)=>`
+    <div class="ch-legend-item">
+      <span class="ch-dot" style="background:${ch.color}"></span>
+      <span style="color:#64748b">${ch.name.split(' ')[0]}</span>
+      <span style="font-weight:700;color:#0f172a;margin-left:auto">${fmt(vals[i])}</span>
     </div>`).join('');
 }
 
-function renderDailyChart(daily) {
-  if (dailyChart) dailyChart.destroy();
-  const gc = '#e5e7eb';
-  dailyChart = new Chart(document.getElementById('dailyChart'), {
-    type: 'bar',
-    data: {
-      labels: daily.map(d => d['날짜']),
-      datasets: [
-        {type:'bar', label:'인입수', data:daily.map(d=>d['인입']),
-         backgroundColor:'#bdd7ee', yAxisID:'y'},
-        {type:'line', label:'즉시처리율', data:daily.map(d=>d['즉시율']),
-         borderColor:'#3b7dd8', pointBackgroundColor:'#3b7dd8',
-         tension:0.3, yAxisID:'y2', pointRadius:4, borderWidth:2},
-        {type:'line', label:'콜백포함처리율', data:daily.map(d=>d['콜백포함율']),
-         borderColor:'#16a34a', pointBackgroundColor:'#16a34a',
-         tension:0.3, yAxisID:'y2', pointRadius:4, borderDash:[4,3], borderWidth:2},
+function renderDaily(daily) {
+  if(CH.daily) CH.daily.destroy();
+  CH.daily=new Chart(document.getElementById('dailyChart'),{
+    type:'bar',
+    data:{
+      labels:daily.map(d=>d['날짜']),
+      datasets:[
+        {type:'bar',label:'인입수',data:daily.map(d=>n(d['인입'])),
+         backgroundColor:'rgba(191,219,254,0.8)',yAxisID:'y',order:2},
+        {type:'line',label:'즉시처리율',data:daily.map(d=>+(n(d['즉시율'])*100).toFixed(2)),
+         borderColor:'#3b82f6',pointBackgroundColor:'#3b82f6',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y2',order:1,borderWidth:2},
+        {type:'line',label:'콜백포함처리율',data:daily.map(d=>+(n(d['콜백포함율'])*100).toFixed(2)),
+         borderColor:'#8b5cf6',pointBackgroundColor:'#8b5cf6',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,borderDash:[4,3],yAxisID:'y2',order:1,borderWidth:2},
       ]
     },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
       scales:{
-        x:{grid:{color:gc}, ticks:{font:{size:11}}},
-        y:{grid:{color:gc}, ticks:{font:{size:10}}, title:{display:true, text:'인입수', font:{size:10}}},
-        y2:{position:'right', grid:{display:false}, min:60, max:100,
-            ticks:{callback:v=>v+'%', font:{size:10}},
-            title:{display:true, text:'처리율', font:{size:10}}}
+        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:11}}},
+        y:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>v.toLocaleString()},
+           title:{display:true,text:'인입수',font:{size:10}}},
+        y2:{position:'right',grid:{display:false},min:60,max:100,
+            ticks:{callback:v=>v+'%',font:{size:10}},
+            title:{display:true,text:'처리율',font:{size:10}}}
       }
     }
   });
+
+  let html=''; let tI=0,tInst=0,tCbR=0,tCbK=0,tF=0,tPC=0;
+  daily.forEach(d=>{
+    const i=n(d['인입']),inst=n(d['In']),cbR=n(d['콜백예약']),cbK=n(d['콜백기타']),f=n(d['fail']);
+    const tm=n(d['통화시간']),pa=n(d['1인당응대']),pc=n(d['PC점검']);
+    tI+=i;tInst+=inst;tCbR+=cbR;tCbK+=cbK;tF+=f;tPC+=pc;
+    // 즉시율/콜백율이 소수(0~1)면 100배, 아니면 그대로
+    const ir = n(d['즉시율'])<=1 ? (n(d['즉시율'])*100).toFixed(2) : n(d['즉시율']).toFixed(2);
+    const cr = n(d['콜백포함율'])<=1 ? (n(d['콜백포함율'])*100).toFixed(2) : n(d['콜백포함율']).toFixed(2);
+    html+=`<tr>
+      <td>${d['날짜']}</td><td>${fmt(i)}</td><td>${fmt(inst)}</td>
+      <td>${fmt(f)}</td><td>${ir}%</td><td>${cr}%</td>
+    </tr>
+    <tr style="background:#f9fafb;font-size:11px;color:#475569">
+      <td>↳콜백</td><td>예약 ${fmt(cbR)}</td><td>기타 ${fmt(cbK)}</td>
+      <td>통화 ${tm}h</td><td>1인 ${pa}분</td><td>PC ${fmt(pc)}건</td>
+    </tr>`;
+  });
+  if(tI>0){
+    const totInst=tInst/tI*100, totCb=(tInst+tCbR+tCbK)/tI*100;
+    html+=`<tr class="tot">
+      <td>합 계</td><td>${fmt(tI)}</td><td>${fmt(tInst)}</td>
+      <td>${fmt(tF)}</td><td>${totInst.toFixed(2)}%</td><td>${totCb.toFixed(2)}%</td>
+    </tr>
+    <tr class="tot" style="font-size:11px">
+      <td>↳콜백</td><td>예약 ${fmt(tCbR)}</td><td>기타 ${fmt(tCbK)}</td>
+      <td colspan="2">합계 ${fmt(tCbR+tCbK)}건</td><td>PC ${fmt(tPC)}건</td>
+    </tr>`;
+  }
+  document.getElementById('dailyBody').innerHTML=html;
 }
 
-function renderPersonTable(persons, wd) {
-  const tbody = document.getElementById('personBody');
-  if (!persons.length) { tbody.innerHTML='<tr><td colspan="8" style="color:#aaa">데이터 없음</td></tr>'; return; }
-
-  // 그룹별 정렬
-  const groups = {};
-  persons.forEach(p => {
-    const g = EXT_GROUP[p['내선']] || '기타';
-    if (!groups[g]) groups[g] = [];
+function renderExt(persons, wd) {
+  const groups={};
+  persons.forEach(p=>{
+    const g=EXT_GROUP[p['내선']]||'기타';
+    if(!groups[g]) groups[g]=[];
     groups[g].push(p);
   });
-
-  let html = '';
-  const orderedGroups = ['기술지원','윙크','캐츠/캐츠홈','기타'];
-  orderedGroups.forEach(grp => {
-    if (!groups[grp]) return;
-    groups[grp].forEach((p, i) => {
-      html += `<tr>
-        ${i===0 ? `<td class="grp-label" rowspan="${groups[grp].length}">${grp}</td>` : ''}
-        <td>${p['내선']}</td>
-        <td>${(p['인입']||0).toLocaleString()}</td>
-        <td>${((p['인입']||0)/wd).toFixed(1)}</td>
-        <td>${(p['발신']||0).toLocaleString()}</td>
-        <td>${((p['발신']||0)/wd).toFixed(1)}</td>
-        <td>${Number(p['인입통화h']||0).toFixed(2)}</td>
-        <td>${Number(p['발신통화h']||0).toFixed(2)}</td>
+  let html=''; let tI=0,tO=0,tIH=0,tOH=0;
+  GRP_ORDER.forEach(grp=>{
+    if(!groups[grp]) return;
+    groups[grp].forEach((p,i)=>{
+      const ib=n(p['인입']),ob=n(p['발신']),ih=n(p['인입통화h']),oh=n(p['발신통화h']);
+      tI+=ib;tO+=ob;tIH+=ih;tOH+=oh;
+      html+=`<tr>
+        ${i===0?`<td class="grp" rowspan="${groups[grp].length}">${grp}</td>`:''}
+        <td>${p['내선']}</td><td>${fmt(ib)}</td><td>${(ib/wd).toFixed(1)}</td>
+        <td>${fmt(ob)}</td><td>${(ob/wd).toFixed(1)}</td>
+        <td>${ih.toFixed(2)}</td><td>${oh.toFixed(2)}</td>
       </tr>`;
     });
   });
-
-  // 합계
-  const tot = persons.reduce((a,p)=>({
-    인입:(a.인입||0)+(p.인입||0), 발신:(a.발신||0)+(p.발신||0),
-    인입통화h:(a.인입통화h||0)+(p.인입통화h||0), 발신통화h:(a.발신통화h||0)+(p.발신통화h||0)
-  }), {});
-  html += `<tr class="total-row">
-    <td colspan="2" style="text-align:left;padding-left:12px">합 계</td>
-    <td>${tot.인입.toLocaleString()}</td><td>${(tot.인입/wd).toFixed(1)}</td>
-    <td>${tot.발신.toLocaleString()}</td><td>${(tot.발신/wd).toFixed(1)}</td>
-    <td>${tot.인입통화h.toFixed(2)}</td><td>${tot.발신통화h.toFixed(2)}</td>
-  </tr>`;
-  tbody.innerHTML = html;
+  html+=`<tr class="tot"><td colspan="2" style="text-align:left;padding-left:14px">합 계</td>
+    <td>${fmt(tI)}</td><td>${(tI/wd).toFixed(1)}</td>
+    <td>${fmt(tO)}</td><td>${(tO/wd).toFixed(1)}</td>
+    <td>${tIH.toFixed(2)}</td><td>${tOH.toFixed(2)}</td></tr>`;
+  document.getElementById('extTbody').innerHTML=html;
 }
 
-// ── 초기 로드 ────────────────────────────────────
-async function init() {
-  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
-    document.getElementById('setupBanner').style.display = 'block';
-    document.getElementById('loading').style.display = 'none';
-    // 샘플 데이터로 미리보기
-    loadSampleData();
-    return;
-  }
-  try {
-    [allWeekly, allDaily, allPerson] = await Promise.all([
-      fetchSheet(SHEETS.weekly),
-      fetchSheet(SHEETS.daily),
-      fetchSheet(SHEETS.person)
-    ]);
-    if (!allWeekly.length) throw new Error('주간현황 시트에 데이터가 없습니다');
-    populateSelector();
-  } catch(e) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('errorMsg').textContent = '❌ ' + e.message + ' — SHEET_ID와 시트 게시 설정을 확인하세요';
-    document.getElementById('errorMsg').style.display = 'block';
-    loadSampleData();
-  }
+function renderMonthSection(monthKey) {
+  if(!monthKey) return;
+  const months=buildMonthly();
+  const mo=months[monthKey]; if(!mo) return;
+
+  document.getElementById('monthTitle').textContent=`[${monthKey} 단비공감팀 고객상담 업무 현황]`;
+  document.getElementById('monthSub').textContent=`${mo.weeks}주 누적 · 총 영업일 ${mo.workDays}일`;
+  document.getElementById('monthKpi').innerHTML=
+    `즉시처리율 <strong>${mo.즉시처리율.toFixed(2)}%</strong><br>콜백포함 <strong>${mo.콜백포함처리율.toFixed(2)}%</strong>`;
+
+  // 개인별 월 누적
+  const mWeeks=allW.filter(w=>w['주차']?.startsWith(monthKey)).map(w=>w['주차']);
+  const mPersons=allP.filter(p=>mWeeks.includes(p['주차']));
+  const extMap={};
+  mPersons.forEach(p=>{
+    const e=p['내선'];
+    if(!extMap[e]) extMap[e]={내선:e,인입:0,발신:0,인입통화h:0,발신통화h:0};
+    extMap[e].인입+=n(p['인입']); extMap[e].발신+=n(p['발신']);
+    extMap[e].인입통화h+=n(p['인입통화h']); extMap[e].발신통화h+=n(p['발신통화h']);
+  });
+  const groups={};
+  Object.values(extMap).forEach(p=>{
+    const g=EXT_GROUP[p.내선]||'기타';
+    if(!groups[g]) groups[g]=[];
+    groups[g].push(p);
+  });
+  let html=''; let tI=0,tO=0,tIH=0,tOH=0;
+  const wd=mo.workDays||1;
+  GRP_ORDER.forEach(grp=>{
+    if(!groups[grp]) return;
+    groups[grp].forEach((p,i)=>{
+      tI+=p.인입;tO+=p.발신;tIH+=p.인입통화h;tOH+=p.발신통화h;
+      html+=`<tr>
+        ${i===0?`<td class="grp" rowspan="${groups[grp].length}">${grp}</td>`:''}
+        <td>${p.내선}</td><td>${fmt(p.인입)}</td><td>${fmt(p.발신)}</td>
+        <td>${p.인입통화h.toFixed(2)}</td><td>${p.발신통화h.toFixed(2)}</td>
+        <td>${(p.인입/wd).toFixed(1)}</td>
+      </tr>`;
+    });
+  });
+  html+=`<tr class="tot"><td colspan="2" style="text-align:left;padding-left:14px">합 계</td>
+    <td>${fmt(tI)}</td><td>${fmt(tO)}</td>
+    <td>${tIH.toFixed(2)}</td><td>${tOH.toFixed(2)}</td><td>${(tI/wd).toFixed(1)}</td></tr>`;
+  document.getElementById('personBody').innerHTML=html;
+
+  // 연간 차트
+  renderAnnual(months);
 }
 
-function populateSelector() {
-  const sel = document.getElementById('weekSelector');
-  sel.innerHTML = allWeekly.slice().reverse().map(w =>
-    `<option value="${w['주차']}">${w['주차']}</option>`).join('');
-  renderWeek(allWeekly[allWeekly.length-1]['주차']);
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
+function renderAnnual(months) {
+  const list=Object.values(months);
+
+  if(CH.annRate) CH.annRate.destroy();
+  CH.annRate=new Chart(document.getElementById('annRateChart'),{
+    type:'line',
+    data:{
+      labels:list.map(m=>m.month),
+      datasets:[
+        {label:'즉시처리율',data:list.map(m=>+m.즉시처리율.toFixed(2)),
+         borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.07)',
+         tension:0.3,pointRadius:5,pointBackgroundColor:'#3b82f6',fill:true,borderWidth:2},
+        {label:'콜백포함처리율',data:list.map(m=>+m.콜백포함처리율.toFixed(2)),
+         borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.05)',
+         tension:0.3,pointRadius:5,pointBackgroundColor:'#8b5cf6',borderDash:[5,3],fill:true,borderWidth:2},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:12}}},
+        y:{grid:{color:'#f1f5f9'},min:60,max:100,ticks:{callback:v=>v+'%',font:{size:10}}}
+      }
+    }
+  });
+
+  let html='';
+  list.forEach(m=>{
+    html+=`<tr><td>${m.month}</td><td>${fmt(m.인입수)}</td><td>${fmt(m.즉시처리수)}</td>
+      <td>${m.즉시처리율.toFixed(2)}%</td><td>${fmt(m.콜백포함수)}</td>
+      <td>${m.콜백포함처리율.toFixed(2)}%</td><td>${m.workDays}</td></tr>`;
+  });
+  document.getElementById('annRateBody').innerHTML=html;
+
+  const PC=9;
+  if(CH.annCall) CH.annCall.destroy();
+  CH.annCall=new Chart(document.getElementById('annCallChart'),{
+    type:'bar',
+    data:{
+      labels:list.map(m=>m.month),
+      datasets:[
+        {type:'bar',label:'일평균 인입수',data:list.map(m=>+m.일평균인입.toFixed(1)),
+         backgroundColor:'rgba(191,219,254,0.8)',yAxisID:'y'},
+        {type:'line',label:'인당 평균 인입',data:list.map(m=>+(m.workDays>0?m.인입수/(m.workDays*PC):0).toFixed(1)),
+         borderColor:'#f59e0b',pointBackgroundColor:'#f59e0b',backgroundColor:'transparent',
+         tension:0.3,pointRadius:5,yAxisID:'y',borderWidth:2},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:12}}},
+        y:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},callback:v=>v.toFixed(0)+'건'}}
+      }
+    }
+  });
+
+  html='';
+  list.forEach(m=>{
+    const perDay=m.일평균인입.toFixed(1);
+    const perPer=(m.workDays>0?m.인입수/(m.workDays*PC):0).toFixed(1);
+    html+=`<tr><td>${m.month}</td><td>${perDay}건</td><td>${perPer}건</td><td>${fmt(m.총발신)}</td><td>${fmt(m.인입수)}</td></tr>`;
+  });
+  document.getElementById('annCallBody').innerHTML=html;
 }
 
-function loadSampleData() {
-  allWeekly = [
-    {주차:'5월1주차',시작일:'2026-05-04',종료일:'2026-05-08',영업일:4,인입수:1532,즉시처리수:1109,즉시처리율:72.39,콜백포함수:1323,콜백포함처리율:86.36,일평균인입:383.0,총발신:1400,윙크인입:879,윙크즉시율:73.38,윙크콜백율:84.87,윙크북스인입:106,윙크북스즉시율:76.42,윙크북스콜백율:90.57,캐츠홈인입:501,캐츠홈즉시율:70.26,캐츠홈콜백율:88.82,캐츠인입:46,캐츠즉시율:67.39,캐츠콜백율:78.26,PC건수:0,PC시간:0,카카오:0,신건문:0,캐츠홈카카오:0,캐츠카카오:0,캐츠시트:0},
-    {주차:'5월2주차',시작일:'2026-05-11',종료일:'2026-05-15',영업일:5,인입수:1941,즉시처리수:1464,즉시처리율:75.43,콜백포함수:1704,콜백포함처리율:87.79,일평균인입:388.2,총발신:1556,윙크인입:1170,윙크즉시율:77.26,윙크콜백율:86.75,윙크북스인입:128,윙크북스즉시율:75.0,윙크북스콜백율:86.72,캐츠홈인입:601,캐츠홈즉시율:71.71,캐츠홈콜백율:90.02,캐츠인입:42,캐츠즉시율:78.57,캐츠콜백율:88.10,PC건수:28,PC시간:10.6,카카오:311,신건문:78,캐츠홈카카오:117,캐츠카카오:16,캐츠시트:6},
-    {주차:'5월3주차',시작일:'2026-05-18',종료일:'2026-05-22',영업일:5,인입수:1907,즉시처리수:1653,즉시처리율:86.68,콜백포함수:1765,콜백포함처리율:92.55,일평균인입:381.4,총발신:1784,윙크인입:1148,윙크즉시율:86.15,윙크콜백율:91.29,윙크북스인입:129,윙크북스즉시율:86.82,윙크북스콜백율:92.25,캐츠홈인입:588,캐츠홈즉시율:87.07,캐츠홈콜백율:94.90,캐츠인입:42,캐츠즉시율:95.24,캐츠콜백율:95.24,PC건수:13,PC시간:5.02,카카오:0,신건문:0,캐츠홈카카오:0,캐츠카카오:0,캐츠시트:0},
+// ── Collapsible toggle ──────────────────────────
+let extOpen=false;
+function toggleExt(){
+  extOpen=!extOpen;
+  document.getElementById('extBody').classList.toggle('open',extOpen);
+  document.getElementById('extToggle').textContent=extOpen?'▲ 접기':'▼ 펼치기';
+}
+
+// ── Init ───────────────────────────────────────
+function populateSelector(){
+  const sel=document.getElementById('weekSel');
+  sel.innerHTML=allW.slice().reverse().map(w=>`<option value="${w['주차']}">${w['주차']}</option>`).join('');
+  renderWeek(allW[allW.length-1]['주차']);
+}
+
+function loadSample(){
+  allW=[
+    {주차:'4월1주차',시작일:'2026-03-30',종료일:'2026-04-03',영업일:5,인입수:1823,즉시처리수:1479,즉시처리율:81.13,콜백포함처리율:90.12,일평균인입:364.6,총발신:1456,윙크인입:1090,윙크북스인입:110,캐츠홈인입:580,캐츠인입:43},
+    {주차:'4월2주차',시작일:'2026-04-06',종료일:'2026-04-10',영업일:5,인입수:1876,즉시처리수:1508,즉시처리율:80.38,콜백포함처리율:89.50,일평균인입:375.2,총발신:1523,윙크인입:1120,윙크북스인입:118,캐츠홈인입:594,캐츠인입:44},
+    {주차:'4월3주차',시작일:'2026-04-13',종료일:'2026-04-17',영업일:5,인입수:1914,즉시처리수:1551,즉시처리율:81.03,콜백포함처리율:90.02,일평균인입:382.8,총발신:1587,윙크인입:1145,윙크북스인입:122,캐츠홈인입:602,캐츠인입:45},
+    {주차:'4월4주차',시작일:'2026-04-20',종료일:'2026-04-24',영업일:5,인입수:1891,즉시처리수:1534,즉시처리율:81.12,콜백포함처리율:90.01,일평균인입:378.2,총발신:1543,윙크인입:1130,윙크북스인입:115,캐츠홈인입:596,캐츠인입:50},
+    {주차:'5월1주차',시작일:'2026-05-04',종료일:'2026-05-08',영업일:4,인입수:1532,즉시처리수:1109,즉시처리율:72.39,콜백포함처리율:86.36,일평균인입:383.0,총발신:1400,윙크인입:879,윙크북스인입:106,캐츠홈인입:501,캐츠인입:46},
+    {주차:'5월2주차',시작일:'2026-05-11',종료일:'2026-05-15',영업일:5,인입수:1941,즉시처리수:1464,즉시처리율:75.43,콜백포함처리율:87.79,일평균인입:388.2,총발신:1556,윙크인입:1170,윙크북스인입:128,캐츠홈인입:601,캐츠인입:42},
+    {주차:'5월3주차',시작일:'2026-05-18',종료일:'2026-05-22',영업일:5,인입수:1907,즉시처리수:1653,즉시처리율:86.68,콜백포함처리율:92.55,일평균인입:381.4,총발신:1784,윙크인입:1148,윙크북스인입:129,캐츠홈인입:588,캐츠인입:42},
   ];
-  allDaily = [
-    {주차:'5월2주차',날짜:'05-11',인입:423,In:298,Out:329,Miss:0,fail:62,즉시율:70.45,콜백포함율:85.34,콜백건:63},
-    {주차:'5월2주차',날짜:'05-12',인입:425,In:258,Out:361,Miss:0,fail:84,즉시율:60.71,콜백포함율:80.24,콜백건:83},
-    {주차:'5월2주차',날짜:'05-13',인입:418,In:320,Out:318,Miss:0,fail:46,즉시율:76.56,콜백포함율:89.00,콜백건:52},
-    {주차:'5월2주차',날짜:'05-14',인입:340,In:304,Out:309,Miss:0,fail:15,즉시율:89.41,콜백포함율:95.59,콜백건:21},
-    {주차:'5월2주차',날짜:'05-15',인입:335,In:284,Out:239,Miss:0,fail:30,즉시율:84.78,콜백포함율:91.04,콜백건:21},
-    {주차:'5월3주차',날짜:'05-18',인입:425,In:355,Out:334,Miss:35,fail:35,즉시율:83.53,콜백포함율:91.76,콜백건:35},
-    {주차:'5월3주차',날짜:'05-19',인입:371,In:316,Out:317,Miss:35,fail:35,즉시율:85.18,콜백포함율:90.57,콜백건:20},
-    {주차:'5월3주차',날짜:'05-20',인입:421,In:363,Out:349,Miss:32,fail:32,즉시율:86.22,콜백포함율:92.40,콜백건:26},
-    {주차:'5월3주차',날짜:'05-21',인입:351,In:322,Out:443,Miss:17,fail:17,즉시율:91.74,콜백포함율:95.16,콜백건:12},
-    {주차:'5월3주차',날짜:'05-22',인입:339,In:297,Out:341,Miss:23,fail:23,즉시율:87.61,콜백포함율:93.22,콜백건:19},
+  allD=[
+    // 5월2주차 (통화량분석 실데이터)
+    {주차:'5월2주차',날짜:'05-11(월)',인입:423,In:298,Out:332,fail:62,즉시율:0.7045,콜백포함율:0.8534,콜백예약:88,콜백기타:25,통화시간:3.3,일인당응대:74.1,PC점검:2},
+    {주차:'5월2주차',날짜:'05-12(화)',인입:425,In:258,Out:361,fail:84,즉시율:0.6071,콜백포함율:0.8024,콜백예약:125,콜백기타:42,통화시간:3.6,일인당응대:95.2,PC점검:14},
+    {주차:'5월2주차',날짜:'05-13(수)',인입:418,In:320,Out:321,fail:46,즉시율:0.7656,콜백포함율:0.8900,콜백예약:85,콜백기타:33,통화시간:3.3,일인당응대:85.5,PC점검:5},
+    {주차:'5월2주차',날짜:'05-14(목)',인입:340,In:304,Out:310,fail:15,즉시율:0.8941,콜백포함율:0.9559,콜백예약:45,콜백기타:24,통화시간:2.6,일인당응대:76.8,PC점검:4},
+    {주차:'5월2주차',날짜:'05-15(금)',인입:335,In:284,Out:239,fail:30,즉시율:0.8478,콜백포함율:0.9104,콜백예약:60,콜백기타:39,통화시간:3.1,일인당응대:80.5,PC점검:3},
+    // 5월3주차 (통화량분석 실데이터 + RESERVATION + 콜백기타)
+    {주차:'5월3주차',날짜:'05-18(월)',인입:425,In:355,Out:339,fail:35,즉시율:0.8353,콜백포함율:0.9176,콜백예약:73,콜백기타:38,통화시간:3.1,일인당응대:81.6,PC점검:2},
+    {주차:'5월3주차',날짜:'05-19(화)',인입:371,In:316,Out:321,fail:35,즉시율:0.8518,콜백포함율:0.9057,콜백예약:60,콜백기타:40,통화시간:2.7,일인당응대:74.9,PC점검:2},
+    {주차:'5월3주차',날짜:'05-20(수)',인입:421,In:363,Out:351,fail:32,즉시율:0.8622,콜백포함율:0.9240,콜백예약:64,콜백기타:38,통화시간:2.7,일인당응대:84.0,PC점검:5},
+    {주차:'5월3주차',날짜:'05-21(목)',인입:351,In:322,Out:443,fail:17,즉시율:0.9174,콜백포함율:0.9516,콜백예약:48,콜백기타:36,통화시간:2.6,일인당응대:92.7,PC점검:2},
+    {주차:'5월3주차',날짜:'05-22(금)',인입:339,In:297,Out:342,fail:23,즉시율:0.8761,콜백포함율:0.9322,콜백예약:60,콜백기타:41,통화시간:2.5,일인당응대:75.2,PC점검:2},
   ];
-  allPerson = [
-    {주차:'5월3주차',내선:9007,인입:272,발신:206,인입통화h:9.12,발신통화h:4.70},
-    {주차:'5월3주차',내선:9008,인입:197,발신:183,인입통화h:7.11,발신통화h:4.84},
-    {주차:'5월3주차',내선:9010,인입:156,발신:237,인입통화h:5.60,발신통화h:3.22},
-    {주차:'5월3주차',내선:9011,인입:202,발신:142,인입통화h:6.83,발신통화h:5.47},
-    {주차:'5월3주차',내선:9012,인입:210,발신:138,인입통화h:9.06,발신통화h:3.65},
-    {주차:'5월3주차',내선:9013,인입:107,발신:300,인입통화h:4.23,발신통화h:12.22},
-    {주차:'5월3주차',내선:9015,인입:184,발신:216,인입통화h:8.31,발신통화h:4.04},
-    {주차:'5월3주차',내선:9021,인입:172,발신:226,인입통화h:8.42,발신통화h:5.20},
-    {주차:'5월3주차',내선:9027,인입:147,발신:135,인입통화h:7.08,발신통화h:4.20},
+  allP=[
+    // 5월1주차 (4영업일, 추정값)
+    {주차:'5월1주차',내선:9007,인입:175,발신:148,인입통화h:6.21,발신통화h:2.91},
+    {주차:'5월1주차',내선:9008,인입:148,발신:97,인입통화h:5.82,발신통화h:2.12},
+    {주차:'5월1주차',내선:9010,인입:124,발신:196,인입통화h:4.99,발신통화h:3.46},
+    {주차:'5월1주차',내선:9011,인입:123,발신:148,인입통화h:4.03,발신통화h:5.95},
+    {주차:'5월1주차',내선:9012,인입:108,발신:74,인입통화h:4.64,발신통화h:1.57},
+    {주차:'5월1주차',내선:9013,인입:57,발신:181,인입통화h:2.84,발신통화h:7.78},
+    {주차:'5월1주차',내선:9015,인입:145,발신:130,인입통화h:5.74,발신통화h:3.17},
+    {주차:'5월1주차',내선:9021,인입:115,발신:100,인입통화h:6.04,발신통화h:2.49},
+    {주차:'5월1주차',내선:9027,인입:53,발신:64,인입통화h:2.49,발신통화h:3.21},
+    // 5월2주차 (CDR 실데이터)
+    {주차:'5월2주차',내선:9007,인입:250,발신:210,인입통화h:9.22,발신통화h:4.13},
+    {주차:'5월2주차',내선:9008,인입:204,발신:131,인입통화h:8.00,발신통화h:2.80},
+    {주차:'5월2주차',내선:9010,인입:168,발신:258,인입통화h:6.77,발신통화h:4.56},
+    {주차:'5월2주차',내선:9011,인입:170,발신:197,인입통화h:5.55,발신통화h:7.96},
+    {주차:'5월2주차',내선:9012,인입:153,발신:100,인입통화h:6.56,발신통화h:2.10},
+    {주차:'5월2주차',내선:9013,인입:81,발신:243,인입통화h:4.00,발신통화h:10.40},
+    {주차:'5월2주차',내선:9015,인입:199,발신:176,인입통화h:7.88,발신통화h:4.27},
+    {주차:'5월2주차',내선:9021,인입:154,발신:136,인입통화h:8.15,발신통화h:3.34},
+    {주차:'5월2주차',내선:9027,인입:75,발신:90,인입통화h:3.54,발신통화h:4.54},
+    // 5월3주차 (CDR 실데이터)
+    {주차:'5월3주차',내선:9007,인입:272,발신:206,인입통화h:9.12,발신통화h:3.28},
+    {주차:'5월3주차',내선:9008,인입:197,발신:183,인입통화h:7.11,발신통화h:3.40},
+    {주차:'5월3주차',내선:9010,인입:156,발신:237,인입통화h:5.60,발신통화h:2.47},
+    {주차:'5월3주차',내선:9011,인입:202,발신:142,인입통화h:6.83,발신통화h:4.53},
+    {주차:'5월3주차',내선:9012,인입:210,발신:138,인입통화h:9.06,발신통화h:2.64},
+    {주차:'5월3주차',내선:9013,인입:107,발신:300,인입통화h:4.23,발신통화h:10.31},
+    {주차:'5월3주차',내선:9015,인입:184,발신:216,인입통화h:8.31,발신통화h:2.62},
+    {주차:'5월3주차',내선:9021,인입:172,발신:226,인입통화h:8.42,발신통화h:3.81},
+    {주차:'5월3주차',내선:9027,인입:147,발신:135,인입통화h:7.08,발신통화h:3.16},
   ];
   populateSelector();
 }
 
+async function init(){
+  if(SHEET_ID==='YOUR_SHEET_ID_HERE'){
+    document.getElementById('setupBanner').style.display='block';
+    loadSample(); return;
+  }
+  try{
+    [allW,allD,allP]=await Promise.all([fetchSheet(SHEETS.weekly),fetchSheet(SHEETS.daily),fetchSheet(SHEETS.person)]);
+    if(!allW.length) throw new Error('주간현황 시트에 데이터가 없습니다');
+    populateSelector();
+  }catch(e){
+    document.getElementById('setupBanner').textContent='❌ '+e.message+' — 샘플 데이터로 표시합니다';
+    document.getElementById('setupBanner').style.display='block';
+    loadSample();
+  }
+}
 init();
 </script>
 </body>
