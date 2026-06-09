@@ -93,6 +93,32 @@ tr:last-child td{border-bottom:none}
 /* setup banner */
 .setup{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:11px 16px;margin-bottom:12px;font-size:12px;color:#78350f}
 
+/* Comment system */
+.cmt-bar{border-top:1px dashed #e2e8f0;margin-top:14px;padding-top:10px;display:flex;align-items:flex-start;gap:8px}
+.cmt-content{flex:1}
+.cmt-label{font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px;letter-spacing:0.3px}
+.cmt-text{font-size:12px;color:#475569;white-space:pre-wrap;line-height:1.6;min-height:18px}
+.cmt-text:empty::before{content:'(코멘트 없음)';color:#cbd5e1;font-style:italic}
+.cmt-textarea{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;resize:vertical;min-height:60px;color:#1e293b;outline:none;line-height:1.6}
+.cmt-textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.15)}
+.cmt-actions{display:flex;gap:6px;margin-top:6px}
+.btn-sm{font-size:11px;padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+.btn-save{background:#3b82f6;color:#fff}.btn-save:hover{background:#2563eb}
+.btn-cancel{background:#f1f5f9;color:#475569}.btn-cancel:hover{background:#e2e8f0}
+.btn-edit{background:transparent;border:1px solid #cbd5e1!important;color:#64748b;padding:3px 10px;border-radius:6px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.btn-edit:hover{background:#f1f5f9}
+.pin-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;align-items:center;justify-content:center}
+.pin-modal.show{display:flex}
+.pin-box{background:#fff;border-radius:12px;padding:24px;width:280px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.pin-box h3{font-size:14px;font-weight:700;margin-bottom:4px}
+.pin-box p{font-size:12px;color:#64748b;margin-bottom:14px}
+.pin-input{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:18px;letter-spacing:4px;text-align:center;outline:none;margin-bottom:10px}
+.pin-input:focus{border-color:#3b82f6}
+.pin-err{color:#dc2626;font-size:11px;margin-bottom:8px;display:none}
+.pin-btns{display:flex;gap:8px}
+.btn-pin-ok{flex:1;background:#3b82f6;color:#fff;border:none;padding:9px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-pin-cancel{flex:1;background:#f1f5f9;color:#475569;border:none;padding:9px;border-radius:8px;font-size:13px;cursor:pointer}
+
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.row2,.daily-layout{grid-template-columns:1fr}}
 </style>
@@ -103,6 +129,20 @@ tr:last-child td{border-bottom:none}
   <div class="logo">단비공감팀 <span>고객상담 업무 현황</span></div>
   <select id="weekSel" onchange="renderWeek(this.value)"><option>불러오는 중...</option></select>
 </header>
+
+<!-- PIN 모달 -->
+<div class="pin-modal" id="pinModal">
+  <div class="pin-box">
+    <h3>🔒 편집 잠금 해제</h3>
+    <p>코멘트를 수정하려면 PIN을 입력하세요</p>
+    <input class="pin-input" type="password" id="pinInput" maxlength="6" placeholder="● ● ● ●" inputmode="numeric">
+    <div class="pin-err" id="pinErr">PIN이 올바르지 않습니다</div>
+    <div class="pin-btns">
+      <button class="btn-pin-ok" onclick="confirmPin()">확인</button>
+      <button class="btn-pin-cancel" onclick="closePinModal()">취소</button>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <div id="setupBanner" class="setup" style="display:none">
@@ -120,7 +160,7 @@ tr:last-child td{border-bottom:none}
       <h3>핵심 지표</h3><span class="sec-toggle" id="t1">▲ 접기</span>
     </div>
     <div class="sec-body open" id="s1">
-      <div class="kpi-grid">
+      <div class="kpi-grid" id="kpiGridWrap">
         <div class="kpi-card" style="--ac:#3b82f6"><div class="kpi-lbl">일 평균 인입수</div><div class="kpi-val" id="k0">-</div><div class="kpi-delta" id="k0d"></div></div>
         <div class="kpi-card" style="--ac:#0ea5e9"><div class="kpi-lbl">주간 인입수</div><div class="kpi-val" id="k1">-</div><div class="kpi-delta" id="k1d"></div></div>
         <div class="kpi-card" style="--ac:#10b981"><div class="kpi-lbl">즉시콜 처리율</div><div class="kpi-val" id="k2">-</div><div class="kpi-delta" id="k2d"></div></div>
@@ -322,6 +362,97 @@ tr:last-child td{border-bottom:none}
 
 <script>
 // ════════════════════════════════════════
+// 🔒  코멘트 PIN 설정 (변경 가능)
+// ════════════════════════════════════════
+const COMMENT_PIN = '1244';   // ← 여기서 PIN 변경
+
+let _pinUnlocked = false;
+let _pinCallback = null;
+
+function openPinModal(cb) {
+  _pinCallback = cb;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinErr').style.display = 'none';
+  document.getElementById('pinModal').classList.add('show');
+  setTimeout(()=>document.getElementById('pinInput').focus(), 100);
+}
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('show');
+}
+function confirmPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === COMMENT_PIN) {
+    _pinUnlocked = true;
+    closePinModal();
+    if (_pinCallback) _pinCallback();
+  } else {
+    document.getElementById('pinErr').style.display = 'block';
+    document.getElementById('pinInput').value = '';
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('pinModal').classList.contains('show')) confirmPin();
+  if (e.key === 'Escape') closePinModal();
+});
+
+// 코멘트 저장/불러오기 (localStorage)
+function getCmt(secId) { return localStorage.getItem('cmt_'+secId)||''; }
+function saveCmt(secId, txt) { localStorage.setItem('cmt_'+secId, txt); }
+
+// 코멘트 바 렌더
+function renderCmtBar(secId) {
+  const txt = getCmt(secId);
+  return `<div class="cmt-bar" id="cmt_${secId}">
+    <div class="cmt-content">
+      <div class="cmt-label">📝 코멘트</div>
+      <div class="cmt-text" id="cmt_txt_${secId}">${txt.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+      <div id="cmt_edit_${secId}" style="display:none">
+        <textarea class="cmt-textarea" id="cmt_ta_${secId}">${txt}</textarea>
+        <div class="cmt-actions">
+          <button class="btn-sm btn-save" onclick="doSaveCmt('${secId}')">저장</button>
+          <button class="btn-sm btn-cancel" onclick="closeCmtEdit('${secId}')">취소</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-edit" onclick="editCmt('${secId}')">✏️ 편집</button>
+  </div>`;
+}
+
+function editCmt(secId) {
+  const doEdit = () => {
+    document.getElementById(`cmt_txt_${secId}`).style.display='none';
+    document.getElementById(`cmt_edit_${secId}`).style.display='block';
+    document.getElementById(`cmt_ta_${secId}`).focus();
+  };
+  if (_pinUnlocked) { doEdit(); return; }
+  openPinModal(doEdit);
+}
+
+function doSaveCmt(secId) {
+  const txt = document.getElementById(`cmt_ta_${secId}`).value;
+  saveCmt(secId, txt);
+  const display = txt.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  document.getElementById(`cmt_txt_${secId}`).innerHTML = display;
+  closeCmtEdit(secId);
+}
+
+function closeCmtEdit(secId) {
+  document.getElementById(`cmt_txt_${secId}`).style.display='';
+  document.getElementById(`cmt_edit_${secId}`).style.display='none';
+}
+
+// 모든 섹션에 코멘트 바 주입
+function injectCmtBars() {
+  ['s1','s2','s3','s4','s5','s6','s7','s8','s9'].forEach(id => {
+    const body = document.getElementById(id);
+    if (!body) return;
+    const div = document.createElement('div');
+    div.innerHTML = renderCmtBar(id);
+    body.appendChild(div.firstElementChild);
+  });
+}
+
+// ════════════════════════════════════════
 // ⚙️  Google Sheets ID
 // ════════════════════════════════════════
 const SHEET_ID = 'YOUR_SHEET_ID_HERE';
@@ -336,7 +467,26 @@ const WEEKLY_EXTRA={
   '5월1주차':{카카오:234,신건문:57,캐츠홈:146,캐츠:14,캐츠시트:8,PC건수:0,PC시간:0},
   '5월2주차':{카카오:311,신건문:78,캐츠홈:117,캐츠:16,캐츠시트:6,PC건수:28,PC시간:10.6},
   '5월3주차':{카카오:251,신건문:73,캐츠홈:132,캐츠:18,캐츠시트:4,PC건수:13,PC시간:5.02},
+  '6월1주차':{카카오:205,신건문:93,캐츠홈:85,캐츠:12,캐츠시트:7,PC건수:12,PC시간:6.0},
 };
+
+// 마스터 탭 U열(편성인원) — 월별 유선통화 환산 인원
+// 텍스트 상담 등 겸임 인력을 제외한 실질 유선전담 인원수
+const TEAM_SIZE_BY_MONTH = {
+  '2025-01':8.5, '2025-02':8.5, '2025-03':9.5, '2025-04':9.5, '2025-05':9.5,
+  '2025-06':9.5, '2025-07':8.5, '2025-08':9.5, '2025-09':9.5, '2025-10':9.5,
+  '2025-11':9.5, '2025-12':9.5,
+  '2026-01':9.5, '2026-02':9.5,
+  '2026-03':8.5, '2026-04':8.5, '2026-05':8.5, '2026-06':8.5,
+};
+
+function getTeamSize(weekLabel) {
+  const w = allW.find(r=>r['주차']===weekLabel);
+  if (!w || !w['시작일']) return 8.5;
+  const d = new Date(w['시작일']);
+  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  return TEAM_SIZE_BY_MONTH[key] ?? 8.5;
+}
 
 const CHANNELS=[
   {key:'윙크인입',   name:'윙크 1522-1244',    color:'#3b82f6'},
@@ -347,22 +497,30 @@ const CHANNELS=[
 
 const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
-// 그래프탭 실데이터 (통화량 분석 그래프 탭)
+// 그래프탭 실데이터 — 2024·2025 전체 12개월, 2026 올해 누적
 const ANN_RATE={
-  즉시:{2024:[0.923,0.904,0.897,0.900,0.826,0.809,0.778,null,null,null,null,null],
-        2025:[0.535,0.528,0.539,0.608,0.6635,0.7456,0.7956,null,null,null,null,null],
-        2026:[0.7105,0.7550,0.7136,0.7735,0.7409,null,null,null,null,null,null,null]},
-  콜백:{2024:[0.967,0.960,0.958,0.958,0.929,0.887,0.874,null,null,null,null,null],
-        2025:[0.775,0.7668,0.7716,0.8139,0.834,0.8771,0.897,null,null,null,null,null],
-        2026:[0.8695,0.8842,0.8638,0.8903,0.8716,null,null,null,null,null,null,null]}
+  즉시:{
+    2024:[0.923,0.904,0.897,0.900,0.826,0.809,0.778,0.588,0.625,0.678,0.689,0.752],
+    2025:[0.535,0.528,0.539,0.608,0.6635,0.7456,0.7956,0.7489,0.7489,0.7640,0.8347,0.8060],
+    2026:[0.7105,0.7550,0.7136,0.7735,0.7855,null,null,null,null,null,null,null]
+  },
+  콜백:{
+    2024:[0.967,0.960,0.958,0.958,0.929,0.887,0.874,0.784,0.796,0.831,0.840,0.8708],
+    2025:[0.775,0.7668,0.7716,0.8139,0.834,0.8771,0.897,0.8443,0.874,0.882,0.914,0.9097],
+    2026:[0.8695,0.8842,0.8638,0.8903,0.8907,null,null,null,null,null,null,null]
+  }
 };
 const ANN_CALL={
-  콜수:{2024:[72.4,81,92,89,87.1,84.6,95.4,null,null,null,null,null],
-        2025:[91,92.2,83.5,76.6,79,76.5,72.4,null,null,null,null,null],
-        2026:[73.2,76.3,78.95,74.6,78,null,null,null,null,null,null,null]},
-  시간:{2024:[2.8,3.2,3.4,3.0,3.2,3.0,3.4,null,null,null,null,null],
-        2025:[3.5,3.7,3.5,3.1,3.2,3.0,2.9,null,null,null,null,null],
-        2026:[3.1,3.1,3.05,3.1,3.2,null,null,null,null,null,null,null]}
+  콜수:{
+    2024:[72.4,81,92,89,87.1,84.6,95.4,92.3,102.4,85.9,87.2,82.8],
+    2025:[91,92.2,83.5,76.6,79,76.5,72.4,null,72.9,71.8,73.7,65.4],
+    2026:[73.2,76.3,78.95,74.6,130.9,null,null,null,null,null,null,null]
+  },
+  시간:{
+    2024:[2.8,3.2,3.4,3.0,3.2,3.0,3.4,3.5,3.9,3.4,3.5,2.9],
+    2025:[3.5,3.7,3.5,3.1,3.2,3.0,2.9,3.3,3.2,2.9,2.8,2.7],
+    2026:[3.1,3.1,3.05,3.1,5.0,null,null,null,null,null,null,null]
+  }
 };
 
 let allW=[],allD=[],allP=[];
@@ -466,15 +624,22 @@ function renderWeek(lbl){
   const wd=n(w['영업일'])||5;
   const persons=allP.filter(r=>r['주차']===lbl);
   const prevPersons=prev?allP.filter(r=>r['주차']===prev['주차']):[];
-  const pc=persons.length||9, ppc=prevPersons.length||9;
+  const pc=getTeamSize(lbl);  // 편성인원 (마스터 U열)
+  const ppc=prev?getTeamSize(prev['주차']):pc;
   const inH=persons.reduce((s,p)=>s+n(p['인입통화h']),0);
   const pinH=prevPersons.reduce((s,p)=>s+n(p['인입통화h']),0);
 
-  // 인당 일 콜 수, 시간 (1일 단위)
-  const perCallDay=pc?n(w['인입수'])/(pc*wd):0;
-  const prevPCD=prev&&ppc?n(prev['인입수'])/(ppc*(n(prev['영업일'])||5)):null;
-  const perTimeDay=pc?(inH/pc/wd)*60:0; // 분
-  const prevPTD=prev&&ppc?(pinH/ppc/(n(prev['영업일'])||5))*60:null;
+  // 인당 일 콜 수: 인입 + 발신 합산 / 영업일 / 인원수
+  const totalCalls = n(w['인입수']) + persons.reduce((s,p)=>s+n(p['발신']),0);
+  const prevCalls  = prev ? n(prev['인입수']) + prevPersons.reduce((s,p)=>s+n(p['발신']),0) : 0;
+  const perCallDay = pc ? totalCalls/(pc*wd) : 0;
+  const prevPCD    = prev&&ppc ? prevCalls/(ppc*(n(prev['영업일'])||5)) : null;
+
+  // 인당 일 콜 시간: (인입통화h + 발신통화h) 합산 / 영업일 / 인원수 (분 단위)
+  const totalH = persons.reduce((s,p)=>s+n(p['인입통화h'])+n(p['발신통화h']),0);
+  const ptotalH= prevPersons.reduce((s,p)=>s+n(p['인입통화h'])+n(p['발신통화h']),0);
+  const perTimeDay = pc ? (totalH/pc/wd)*60 : 0;
+  const prevPTD    = prev&&ppc ? (ptotalH/ppc/(n(prev['영업일'])||5))*60 : null;
 
   const cards=[
     [n(w['일평균인입']).toFixed(1)+'건', n(w['일평균인입']), prev?.['일평균인입'], '건', true],
@@ -505,11 +670,17 @@ function renderWeek(lbl){
 function renderTrend(weeks){
   if(CH.trend) CH.trend.destroy();
   const wd_arr=weeks.map(w=>n(w['영업일'])||5);
-  const pc_arr=weeks.map(w=>allP.filter(r=>r['주차']===w['주차']).length||9);
-  const perCall=weeks.map((w,i)=>+(n(w['인입수'])/(pc_arr[i]*wd_arr[i])).toFixed(1));
+  const pc_arr=weeks.map(w=>getTeamSize(w['주차']));  // 편성인원 (마스터 U열)
+  // 인당 일 콜 수: (인입+발신) / 영업일 / 편성인원
+  const perCall=weeks.map((w,i)=>{
+    const ps=allP.filter(r=>r['주차']===w['주차']);
+    const totalC=n(w['인입수'])+ps.reduce((s,p)=>s+n(p['발신']),0);
+    return +(totalC/(pc_arr[i]*wd_arr[i])).toFixed(1);
+  });
+  // 인당 일 콜 시간: (인입통화h+발신통화h) / 영업일 / 편성인원 (분)
   const perTime=weeks.map((w,i)=>{
     const ps=allP.filter(r=>r['주차']===w['주차']);
-    const h=ps.reduce((s,p)=>s+n(p['인입통화h']),0);
+    const h=ps.reduce((s,p)=>s+n(p['인입통화h'])+n(p['발신통화h']),0);
     return +((h/pc_arr[i]/wd_arr[i])*60).toFixed(0);
   });
 
@@ -620,8 +791,9 @@ function renderDailySection(daily, wd){
     }
   });
 
-  // 차트 2: 인입수/인당콜/인당시간 막대
-  const PC=9;
+  // 차트 2: 인입수/인당콜/인당시간 막대 (편성인원 사용)
+  const weekLblD=document.getElementById('dailyTitle').textContent.replace(/[^0-9월주차]/g,'').trim()||'';
+  const PC=getTeamSize(weekLblD)||8.5;
   if(CH.dailyCall) CH.dailyCall.destroy();
   CH.dailyCall=new Chart(document.getElementById('dailyCallChart'),{
     type:'bar',
@@ -804,7 +976,7 @@ function renderAnnual(){
   });
   document.getElementById('annRateBody').innerHTML=html;
 
-  // 콜수/시간
+  // 콜수/시간 (ANN_CALL의 콜수는 이미 편성인원 반영된 그래프탭 값)
   if(CH.annCall) CH.annCall.destroy();
   const callDatasets=[];
   YEARS.forEach(yr=>{
@@ -862,6 +1034,7 @@ function loadSample(){
     {주차:'5월1주차',시작일:'2026-05-04',종료일:'2026-05-08',영업일:4,인입수:1532,즉시처리율:72.39,콜백포함처리율:86.36,일평균인입:383.0,총발신:1400,윙크인입:879,윙크북스인입:106,캐츠홈인입:501,캐츠인입:46},
     {주차:'5월2주차',시작일:'2026-05-11',종료일:'2026-05-15',영업일:5,인입수:1941,즉시처리율:75.43,콜백포함처리율:87.79,일평균인입:388.2,총발신:1556,윙크인입:1170,윙크북스인입:128,캐츠홈인입:601,캐츠인입:42},
     {주차:'5월3주차',시작일:'2026-05-18',종료일:'2026-05-22',영업일:5,인입수:1907,즉시처리율:86.68,콜백포함처리율:92.55,일평균인입:381.4,총발신:1784,윙크인입:1148,윙크북스인입:129,캐츠홈인입:588,캐츠인입:42},
+    {주차:'6월1주차',시작일:'2026-06-01',종료일:'2026-06-05',영업일:4,인입수:1418,즉시처리율:76.87,콜백포함처리율:88.79,일평균인입:354.5,총발신:1022,윙크인입:820,윙크북스인입:98,캐츠홈인입:455,캐츠인입:45},
   ];
   allD=[
     // 5월2주차 (통화량분석 실데이터)
@@ -876,6 +1049,11 @@ function loadSample(){
     {주차:'5월3주차',날짜:'05-20(수)',인입:421,In:363,Out:351,fail:32,즉시율:0.8622,콜백포함율:0.9240,통화시간:2.7,일인당응대:84.0,PC점검:5},
     {주차:'5월3주차',날짜:'05-21(목)',인입:351,In:322,Out:443,fail:17,즉시율:0.9174,콜백포함율:0.9516,통화시간:2.6,일인당응대:92.7,PC점검:2},
     {주차:'5월3주차',날짜:'05-22(금)',인입:339,In:297,Out:342,fail:23,즉시율:0.8761,콜백포함율:0.9322,통화시간:2.5,일인당응대:75.2,PC점검:2},
+    // 6월1주차 (통화량분석 실데이터, 6/3 현충일 휴무)
+    {주차:'6월1주차',날짜:'06-01(월)',인입:405,In:310,Out:233,fail:41,즉시율:0.7654,콜백포함율:0.8988,통화시간:3.1,일인당응대:72.4,PC점검:1},
+    {주차:'6월1주차',날짜:'06-02(화)',인입:301,In:273,Out:286,fail:17,즉시율:0.9070,콜백포함율:0.9435,통화시간:2.5,일인당응대:74.5,PC점검:3},
+    {주차:'6월1주차',날짜:'06-04(목)',인입:429,In:273,Out:217,fail:69,즉시율:0.6364,콜백포함율:0.8392,통화시간:3.5,일인당응대:75.4,PC점검:2},
+    {주차:'6월1주차',날짜:'06-05(금)',인입:283,In:234,Out:286,fail:32,즉시율:0.8269,콜백포함율:0.8869,통화시간:2.8,일인당응대:74.4,PC점검:6},
   ];
   allP=[
     {주차:'5월1주차',내선:9007,인입:175,발신:148,인입통화h:6.21,발신통화h:2.91},
@@ -907,11 +1085,22 @@ function loadSample(){
     {주차:'5월3주차',내선:9015,인입:184,발신:216,인입통화h:8.31,발신통화h:2.62},
     {주차:'5월3주차',내선:9021,인입:172,발신:226,인입통화h:8.42,발신통화h:3.81},
     {주차:'5월3주차',내선:9027,인입:147,발신:135,인입통화h:7.08,발신통화h:3.16},
+    // 6월1주차 (개인탭 실데이터, 연차반영 통화시간×근무보정)
+    {주차:'6월1주차',내선:9007,인입:157,발신:120,인입통화h:5.29,발신통화h:3.71},
+    {주차:'6월1주차',내선:9008,인입:142,발신:70, 인입통화h:5.45,발신통화h:2.58},
+    {주차:'6월1주차',내선:9010,인입:88, 발신:124,인입통화h:2.13,발신통화h:2.97},
+    {주차:'6월1주차',내선:9011,인입:151,발신:107,인입통화h:6.95,발신통화h:5.05},
+    {주차:'6월1주차',내선:9012,인입:200,발신:123,인입통화h:7.84,발신통화h:4.96},
+    {주차:'6월1주차',내선:9013,인입:79, 발신:163,인입통화h:4.55,발신통화h:9.05},
+    {주차:'6월1주차',내선:9015,인입:119,발신:130,인입통화h:5.37,발신통화h:5.83},
+    {주차:'6월1주차',내선:9021,인입:33, 발신:42, 인입통화h:1.23,발신통화h:1.57},
+    {주차:'6월1주차',내선:9027,인입:104,발신:136,인입통화h:4.13,발신통화h:5.47},
   ];
   populateSelector();
 }
 
 async function init(){
+  injectCmtBars();   // 코멘트 바 먼저 주입
   if(SHEET_ID==='YOUR_SHEET_ID_HERE'){
     document.getElementById('setupBanner').style.display='block';
     loadSample(); return;
